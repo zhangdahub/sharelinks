@@ -1,9 +1,8 @@
 
-Markups
+Anita C Perkins perkins@mit.edu
 -------
-### Classes
-Anita C Perkins ? perkins@mit.edu
-1月21日 发送至 Da 
+### Jan 21 to Da
+
 Greetings.    Regarding your questions at today’s Refworks session:
  
 1.   I think Remlee has already mentioned to you that RefWorks does work with Linux

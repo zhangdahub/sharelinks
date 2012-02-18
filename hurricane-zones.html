@@ -1,0 +1,377 @@
+<!DOCTYPE html> 
+<html> 
+<head>
+
+
+<!-- Chartbeat Time Capture -->
+  <script type="text/javascript">var _sf_startpt=(new
+  Date()).getTime()</script>
+  
+<title>WNYC Map | NYC Hurricane Evacuation Zones</title> 
+
+<link rel="stylesheet" type="text/css" media="all"
+    href="http://media40.wnyc.net/media/css/screen.css" /> 
+<link rel="stylesheet" type="text/css" media="all"
+    href="http://media40.wnyc.net/media/css/screen_wnyc.css" /> 
+<!--[if lte IE 8]>
+    <link rel="stylesheet" type="text/css" media="all"
+    href="http://media40.wnyc.net/media/css/screen_ie.css" /><![endif]--> 
+<!--[if lt IE 8]>
+    <link rel="stylesheet" type="text/css" media="all"
+    href="http://media40.wnyc.net/media/css/screen_ie7.css" /><![endif]-->
+
+<link rel="stylesheet" href="css/style.css" type="text/css" media="screen" title="no title" charset="utf-8">
+<link rel="stylesheet" href="css/dropdown.css" type="text/css" media="screen" title="no title" charset="utf-8">
+<link rel="stylesheet" href="css/jquery.alerts.css" type="text/css" media="screen" title="no title" charset="utf-8">
+
+<script type="text/javascript" src="http://maps.google.com/maps/api/js?v=3.4&sensor=false"></script><script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>  
+<script type="text/javascript" src="http://project.wnyc.org/census-maps/js/jquery.url.min.js"></script> 
+<script src="js/jquery.alerts.js" type="text/javascript" charset="utf-8"></script>
+
+<script>
+
+var map;
+var geocoder;
+var mapdrawn = false;
+var basemap_location = "http://project-s3.wnyc.org/news-maps/hurricane-zones/hurricane-zones-mini.html"
+
+// get named params from the URL using jquery.url.min.js
+var map_lat = $.url.param("lat");
+var map_lon = $.url.param("lon");
+var map_zoom = $.url.param("zoom");
+
+// set defaults if no named params in URL
+if (map_lat == "") {
+	map_lat = 40.7110;
+}
+
+if (map_lon == "") {
+	map_lon = -73.8610;
+}
+
+if (map_zoom == "") {
+	map_zoom = 11;
+} else {
+	map_zoom = parseInt(map_zoom);
+}
+
+
+// set initial starting point for map
+var centerpoint = new google.maps.LatLng(map_lat, map_lon);
+var MY_MAPTYPE_ID = 'wnyc';
+
+// set fusion table to use
+var newyork_table = 964884;
+
+function drawmap() {
+	
+	// This draws shapes for NYC 
+	// This code is grungy ... because Fusion Tables will drop shapes if too many are on a layer
+	// And there's a limit to the length of a request.
+	// So I had to get clever. Clever code == bad code.
+	
+	// First, draw the legend (esp since it should appear even before the data does)
+	// drawLegend();  
+	
+	// Draw the maps in blocks by county
+		
+		newyork_layer1 = new google.maps.FusionTablesLayer({
+		  query: {
+		    select: 'geometry',
+		    from: newyork_table
+		  }
+		});
+		newyork_layer1.setMap(map);
+		
+		
+    // // Evacuation Centers Table 
+    // newyork_layer2 = new google.maps.FusionTablesLayer({
+    //   query: {
+    //     select: 'geometry',
+    //     from: '1356549'
+    //   }
+    // });
+    // newyork_layer2.setMap(map);
+		
+		
+    mapdrawn = true;
+		
+}
+
+function codeAddress() {
+  var address = document.getElementById("address").value;
+  geocoder.geocode( { 'address': address}, function(results, status) {
+    if (status == google.maps.GeocoderStatus.OK) {
+      map.setCenter(results[0].geometry.location);
+			map.setZoom(15);
+			marker = new google.maps.Marker({
+        map:map,
+        draggable:false,
+        animation: google.maps.Animation.DROP,
+        position: results[0].geometry.location
+      });
+    } else {
+      alert("Couldn't relocate for the following reason: " + status);
+    }
+  });
+}
+
+function currentMapUrl() {
+	var embed_url_response = basemap_location + 
+			"?lat=" + map.getCenter().lat().toFixed(4) + 
+			"&lon=" + map.getCenter().lng().toFixed(4) + 
+			"&zoom=" + map.getZoom();
+	return embed_url_response;
+}
+
+function embedBox() {
+	var embed_url_response = currentMapUrl();
+	jAlert('<strong>The direct link for this map is: <br></strong>http://wny.cc/EvacZones<br><br><strong>To embed this map on a blog or site, copy & paste this:<br></strong>&lt;iframe src=\"'+embed_url_response+'\" height=\"700\" width=\"560\" scrolling=\"no\" frameborder=\"0\"&gt;&lt;/iframe><br>&nbsp;<br>TIP: Adjust the \'width\' value to match the width of your blog or column.', 'Share or Embed');
+	
+}
+
+function expandWindow() {
+    window.open( currentMapUrl() );
+    return false;
+};
+
+// function drawLegend() {
+//   
+//     $('#legend').html("  ");
+//     $('#legendfront').html("  ");
+//     $('#legendback').html("  ");  
+//      
+// };
+
+function initialize() {
+    
+	geocoder = new google.maps.Geocoder();
+
+  var stylez = [
+  {
+    featureType: "road",
+    elementType: "geometry",
+    stylers: [
+      { gamma: 4.76 },
+      { visibility: "simplified" },
+      { saturation: -99 },
+      { lightness: -20 }
+    ]
+  },{
+    featureType: "poi",
+    elementType: "all",
+    stylers: [
+      { saturation: 0 },
+      { visibility: "off" }
+    ]
+  },{
+    featureType: "transit",
+    elementType: "all",
+    stylers: [
+      { visibility: "off" }
+    ]
+  },{
+    featureType: "",
+    elementType: "labels",
+    stylers: [
+			{ saturation: -99 },
+      { hue: "#ffff00" }
+    ]
+  },{
+    featureType: "road.highway",
+    elementType: "labels",
+    stylers: [
+      { visibility: "off" }
+    ]
+  },{
+    featureType: "landscape",
+    elementType: "all",
+    stylers: [
+      { visibility: "off" }
+    ]
+  },{
+    featureType: "water",
+    elementType: "all",
+    stylers: [
+      { lightness: 20 }
+    ]
+  }
+
+  ];
+
+
+  var mapOptions = {
+    zoom: map_zoom,
+    center: centerpoint,
+    streetViewControl: false,
+    mapTypeControl: false,
+    zoomControl: true,
+    panControl: true,
+    scrollwheel: false,
+    mapTypeControlOptions: {
+       mapTypeIds: [MY_MAPTYPE_ID]
+    },
+    mapTypeId: MY_MAPTYPE_ID
+  };
+ 
+  map = new google.maps.Map(document.getElementById("map_canvas"),
+      mapOptions);
+
+	// Set one option for the styled map: Its name
+	var styledMapOptions = {
+    name: "WNYC"
+	};
+
+	// this creates the new StyledMapType object, using the styles variable and the options
+	var myMapType = new google.maps.StyledMapType(stylez, styledMapOptions);
+
+	// set 'WNYC' as a map type, naming it ... then use that one to start with 
+	map.mapTypes.set('WNYC', myMapType);
+	map.setMapTypeId('WNYC');
+	
+	// draw the map!
+	drawmap();
+
+}
+
+// Do the following when the page is ready
+$(document).ready(function(){
+
+ // Watch the input box and clear it when highlighted
+ $('#address').focus(function(){
+  if(this.value=='Address')
+  {
+  this.value=''
+  }
+ });
+ 
+ // if input box unhighlighted and empty, put back helper text
+ $('#address').blur(function(){
+  if(this.value=='')
+  {
+  this.value='Address'
+  }
+ });
+
+ // run the initialize function
+ initialize();
+
+});
+</script>
+
+<!-- Start Google Analytic Code --> 
+<script type="text/javascript">
+
+ var _gaq = _gaq || [];
+ _gaq.push(['_setAccount', 'UA-283599-23']);
+ _gaq.push(['_trackPageview']);
+
+ (function() {
+   var ga = document.createElement('script'); ga.type =
+'text/javascript'; ga.async = true;
+   ga.src = ('https:' == document.location.protocol ? 'https://ssl' :
+'http://www') + '.google-analytics.com/ga.js';
+   var s = document.getElementsByTagName('script')[0];
+s.parentNode.insertBefore(ga, s);
+ })();
+
+</script>
+<!-- End Google Analytic Code -->
+
+</head> 
+
+
+<body style="background:white">
+
+<!-- MAP TOP -->
+
+<table border="0" cellspacing="0" cellpadding="0" style="height: 30px;" >
+	<tr>
+		<td style="width: 80px;">	<a href="http://www.wnyc.org/" target="_blank"><img src="images/wnyc_logo_tiny_30px.gif" width="71" height="30" alt="WNYC" title="WNYC" style="border: 0;"></a>
+	  </td>
+		<td style="font-size: 1.5em; color:#E01838;">
+		NYC Evacuation Zones
+		</td>
+		<td id="legendfront" style="text-align:right; width:40px;" ></td>
+		<td style="text-align:left;">
+			<table id="legend" border="0" cellspacing="0" cellpadding="0">
+			  	<div> 
+  			    Zoom to <input class="input" id="address" type="textbox" style="width:170px;" value="Address" onkeydown="if (event.keyCode == 13) document.getElementById('geoButton').click()"/> 
+  			    <input class="button" type="button" id="geoButton" value="GO" onclick="codeAddress()"> 
+  			  </div>
+			</table>		
+		</td>
+		<td id="legendback"></td>
+	</tr>
+</table>
+
+	<div id="headertext" style="margin:4px 4px;">
+	  
+    <!-- <strong style='color:red'>Red pins</strong> mark the copy goes here. -->
+
+	</div>
+	
+<!-- THE MAP -->
+<div id="map_canvas" style="width:100%; height:92%"></div>
+
+<!-- Begin Box (aka dropdown) -->
+<div id="dropdown">
+
+  <!-- Begin Key -->
+  <h2>Key</h2> 
+  <table border="0" cellspacing="3" cellpadding="0">    
+    <tr><td class="segment1"></td><td>&nbsp;<strong>Zone A</strong> - Potential flooding from any hurricane near NYC.</td></tr>
+    <tr><td class="segment2"></td><td>&nbsp;<strong>Zone B</strong> - Potential flooding from a Category 2+ hurricane.</td></tr>
+    <tr><td class="segment3"></td><td>&nbsp;<strong>Zone C</strong> - Potential flooding from a Category 3-4 hurricane hitting just south of NYC.</td></tr>
+    
+    <!-- Evacuation Centers 
+    <tr><td class="segment4"><img src="images/red-dot.jpg" width="19" height="19" alt="Red Dot"></td><td>&nbsp;<strong>Evacuation Centers</td></tr>         
+     -->
+
+
+  </table>
+
+
+      <div id="embed" style="cursor:pointer; " onclick="embedBox()">
+				Share or embed this map
+			</div>
+			
+  <!-- End Key -->
+			
+  <!-- Begin credit -->
+  <div style="font-size: 85%; text-align:right; line-height: 1.1em;">
+		<strong>Map:</strong> <a href="mailto:jkeefe@wnyc.org?subject=Hurricane_Map_Feedback">John Keefe</a>/WNYC<br><strong>Source:</strong><a href="http://www.nyc.gov/html/datamine/html/home/home.shtml" target="_blank">NYC DataMine</a>, <a href="http://www.nyc.gov/html/oem/html/home/home.shtml" title="Office of Emergency Management (OEM)" target="_blank">OEM</a>
+	</div>
+  <!-- End Credit  -->
+  
+</div>
+<!-- End Box (aka dropdown) -->
+
+
+<!-- BEGIN MAP FOOTER -->
+<!-- END MAP FOOTER -->
+
+<!-- Begin Chartbeat Code -->
+<script type="text/javascript">
+var _sf_async_config={uid:4030,domain:"project.wnyc.org"};
+(function(){
+ function loadChartbeat() {
+   window._sf_endpt=(new Date()).getTime();
+   var e = document.createElement('script');
+   e.setAttribute('language', 'javascript');
+   e.setAttribute('type', 'text/javascript');
+   e.setAttribute('src',
+      (("https:" == document.location.protocol) ?
+"https://a248.e.akamai.net/chartbeat.download.akamai.com/102508/" :
+"http://static.chartbeat.com/") +
+      "js/chartbeat.js");
+   document.body.appendChild(e);
+ }
+ var oldonload = window.onload;
+ window.onload = (typeof window.onload != 'function') ?
+    loadChartbeat : function() { oldonload(); loadChartbeat(); }; })();
+</script>
+<!-- End Chartbeat Code -->
+
+</body> 
+</html>

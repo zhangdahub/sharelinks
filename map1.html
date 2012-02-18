@@ -1,0 +1,28 @@
+<html style='height: 100%'>
+<head>
+<script type='text/javascript' src='http://maps.google.com/maps/api/js?sensor=false'></script>
+<script type='text/javascript'>
+function initialize() {
+    map = new google.maps.Map(document.getElementById('map_canvas'), {
+        center: new google.maps.LatLng(51.502758957640296, -0.00823974609375),
+        zoom: 12,
+        mapTypeId: google.maps.MapTypeId.ROADMAP
+    });
+
+layer = new google.maps.FusionTablesLayer({
+    map: map,
+    heatmap: { enabled: false },
+    query: {
+        select: "col4",
+        from: "628653",
+        where: ""
+    }
+    });
+}
+
+</script>
+</head>
+<body onload='initialize()' style='height: 100%; margin: 0px; padding: 0px'>
+<div id="map_canvas" style='height: 100%'></div>
+</body>
+</html>

@@ -20,6 +20,8 @@ First, we are going to start by installing a package:
 
 Do this for `sp` and `maptools` also.
 
+	guagua
+
 Loading data into a dataframe:
 
 	# a dataframe is similar to an excel-spreadsheet
